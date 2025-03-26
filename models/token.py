@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, Boolean, Float, DateTime
 from database.base import Base
-from datetime import datetime
+from datetime import datetime, timezone
 
 class Token(Base):
     __tablename__ = "tokens"
@@ -9,4 +9,4 @@ class Token(Base):
     expires_in = Column(String)
     realm_id = Column(String)
     token_type = Column(String)
-    created_at = Column(DateTime, default=datetime.now(datetime.timezone.utc))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc))
