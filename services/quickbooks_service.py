@@ -1,4 +1,5 @@
 import os
+import backoff
 import requests
 from sqlalchemy.orm import Session
 from models.token import Token
@@ -52,6 +53,8 @@ def refresh_token(db, token: Token):
     save_tokens_to_db(db, new_token_data)
     return get_latest_token(db)
 
+
+@backoff.on_exception(backoff.expo, (requests.exceptions.RequestException,), max_tries=3)
 def fetch_accounts_from_qbo(token: Token):
     headers = {
         "Authorization": f"Bearer {token.access_token}",
@@ -60,4 +63,5 @@ def fetch_accounts_from_qbo(token: Token):
     }
     query = "select * from Account"
     url = ACCOUNT_API_URL.format(realm_id=token.realm_id) + f"?query={query}&minorversion=65"
-    return requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers)
+    return response
