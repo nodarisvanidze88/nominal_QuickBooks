@@ -11,4 +11,4 @@ class AccountOut(BaseModel):
     current_balance: Optional[float]
 
     class Config:
-        orm_mode = True
+        from_attributes = True

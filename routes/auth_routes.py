@@ -1,21 +1,14 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Depends
 from fastapi.responses import RedirectResponse
-from database.session import get_db
 from sqlalchemy.orm import Session
 from intuitlib.client import AuthClient
 from intuitlib.enums import Scopes
 from intuitlib.exceptions import AuthClientError
-from fastapi import Depends
 from services.quickbooks_service import save_tokens_to_db
-import os
+from core.config import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, ENVIRONMENT
+from database.session import get_db
 
 router = APIRouter()
-
-# Load env values
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-REDIRECT_URI = os.getenv("REDIRECT_URI")
-ENVIRONMENT = os.getenv("ENVIRONMENT", "sandbox")  # "sandbox" or "production"
 
 auth_client = AuthClient(
     client_id=CLIENT_ID,

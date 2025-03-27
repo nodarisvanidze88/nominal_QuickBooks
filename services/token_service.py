@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta, timezone
-from models.token import Token
 from sqlalchemy.orm import Session
+from models.token import Token
 from services.quickbooks_service import refresh_token as refresh
 from utils.logger import get_logger
 from exceptions.exeptions import raise_qbo_error

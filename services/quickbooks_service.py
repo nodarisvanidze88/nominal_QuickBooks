@@ -1,19 +1,14 @@
-import os
 import backoff
 import requests
 from sqlalchemy.orm import Session
-from models.token import Token
-from dotenv import load_dotenv
 from intuitlib.client import AuthClient
 from intuitlib.exceptions import AuthClientError
-load_dotenv()
+from models.token import Token
+from core.config import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, ENVIRONMENT
 
-CLIENT_ID = os.getenv("CLIENT_ID")
-CLIENT_SECRET = os.getenv("CLIENT_SECRET")
-REDIRECT_URI = os.getenv("REDIRECT_URI")
 TOKEN_URL = "https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer"
 ACCOUNT_API_URL = "https://sandbox-quickbooks.api.intuit.com/v3/company/{realm_id}/query"
-ENVIRONMENT = os.getenv("ENVIRONMENT", "sandbox")
+
 def save_tokens_to_db(db: Session, token_data: dict):
     token = Token(
         access_token=token_data["access_token"],

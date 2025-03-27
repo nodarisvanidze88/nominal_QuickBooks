@@ -1,10 +1,11 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
+from typing import Optional, List
 from database.session import get_db
 from models.account import Account
 from schemas.account import AccountOut
 from services.quickbooks_service import get_latest_token, refresh_token, fetch_accounts_from_qbo
-from typing import Optional, List
+
 
 router = APIRouter()
 
@@ -21,7 +22,6 @@ def sync_accounts(db: Session = Depends(get_db)):
         return {"error": "Failed to fetch accounts", "details": response.json()}
 
     accounts_data = response.json().get("QueryResponse", {}).get("Account", [])
-    saved = []
 
     for acc in accounts_data:
         a = Account(
@@ -33,8 +33,6 @@ def sync_accounts(db: Session = Depends(get_db)):
             current_balance=acc.get("CurrentBalance", 0.0),
         )
         db.merge(a)
-        saved.append(a)
-
     db.commit()
     return db.query(Account).all()
 
