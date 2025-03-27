@@ -30,10 +30,9 @@ def refresh_token(db, token: Token):
         environment=ENVIRONMENT,
         redirect_uri=REDIRECT_URI,
     )
-    auth_client.refresh_token = token.refresh_token
 
     try:
-        auth_client.refresh_access_token()
+        auth_client.refresh(token.refresh_token)
     except AuthClientError as e:
         raise Exception(f"Failed to refresh token: {str(e)}")
 
@@ -47,6 +46,7 @@ def refresh_token(db, token: Token):
 
     save_tokens_to_db(db, new_token_data)
     return get_latest_token(db)
+
 
 
 @backoff.on_exception(backoff.expo, (requests.exceptions.RequestException,), max_tries=3)
