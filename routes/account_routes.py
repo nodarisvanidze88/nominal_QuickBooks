@@ -6,7 +6,7 @@ from models.account import Account
 from schemas.account import AccountOut
 from services.quickbooks_service import fetch_accounts_from_qbo
 from services.token_service import get_latest_token, refresh_token
-from exceptions.exeptions import raise_token_not_found 
+from exceptions.exeptions import raise_token_not_found, raise_accounts_fetch_failed
 
 router = APIRouter()
 
@@ -22,7 +22,7 @@ def sync_accounts(db: Session = Depends(get_db)):
         response = fetch_accounts_from_qbo(token)
 
     if response.status_code != 200:
-        return {"error": "Failed to fetch accounts", "details": response.json()}
+        raise_accounts_fetch_failed(response.json())
 
     accounts_data = response.json().get("QueryResponse", {}).get("Account", [])
 

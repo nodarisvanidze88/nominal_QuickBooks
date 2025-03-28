@@ -1,20 +1,14 @@
 from sqlalchemy.orm import Session
 from models.token import Token
-from intuitlib.client import AuthClient
-from utils.logger import get_logger
-from exceptions.exeptions import raise_qbo_error
+from exceptions.exeptions import raise_qbo_error, raise_token_refresh_failed
 from core.config import auth_client
 from intuitlib.exceptions import AuthClientError
-
-logger = get_logger(__name__)
-
 
 def get_valid_token(db: Session) -> Token:
     token = db.query(Token).order_by(Token.created_at.desc()).first()
     if not token:
         raise_qbo_error("Token not found. Please authenticate first.")
     if token.is_token_expired():
-        logger.info("Access token expired. Refreshing...")
         token = refresh_token(db, token)
     return token
 
@@ -23,9 +17,9 @@ def get_latest_token(db: Session) -> Token:
 
 def refresh_token(db: Session, token: Token):
     try:
-        auth_client.refresh(refresh_token="123456")
+        auth_client.refresh(refresh_token=token.refresh_token)
     except AuthClientError as e:
-        raise Exception(f"Failed to refresh token: {str(e)}")
+        raise_token_refresh_failed(str(e))
 
     new_token_data = {
         "access_token": auth_client.access_token,

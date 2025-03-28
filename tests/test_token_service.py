@@ -107,7 +107,7 @@ def test_refresh_token_success():
 
         result = refresh_token(db, token)
 
-        mock_auth_client.refresh.assert_called_once_with(refresh_token="123456")
+        mock_auth_client.refresh.assert_called_once_with(refresh_token="old-refresh")
         mock_save_tokens.assert_called_once_with(db, {
             "access_token": "new-access",
             "refresh_token": "new-refresh",
@@ -126,13 +126,15 @@ def test_refresh_token_failure():
     token.refresh_token = "old-refresh"
     fake_response = Response()
     fake_response.status_code = 400
-    fake_response._content = b"Invalid refresh token"
+    fake_response._content = b'{"error":"invalid_grant","error_description":"Incorrect or invalid refresh token"}'
 
     with patch("core.config.auth_client") as mock_auth_client:
         mock_auth_client.refresh.side_effect = AuthClientError(fake_response)
 
-        with pytest.raises(Exception) as exc_info:
+        with pytest.raises(HTTPException) as exc_info:
             refresh_token(db, token)
 
-        assert "Failed to refresh token" in str(exc_info.value)
+        assert exc_info.value.status_code == 400
+        assert exc_info.value.detail["error"] == "Failed to refresh access token"
+        assert "invalid refresh token" in exc_info.value.detail["details"]
 

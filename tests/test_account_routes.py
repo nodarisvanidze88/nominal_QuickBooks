@@ -151,7 +151,10 @@ def test_sync_accounts_fetch_fails(mock_token):
 
         response = client.get("/accounts")
 
-        assert response.status_code == 200
-        assert "error" in response.json()
+        assert response.status_code == 400
+        data = response.json()
+        assert data["detail"]["error"] == "Failed to fetch accounts"
+        assert "Internal Server Error" in data["detail"]["details"]["error"]
 
         app.dependency_overrides = {}
+

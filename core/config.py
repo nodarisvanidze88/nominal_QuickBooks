@@ -26,3 +26,4 @@ auth_client = AuthClient(
     environment=ENVIRONMENT,
     redirect_uri=REDIRECT_URI,
 )
+LOGGLY_TOKEN = os.getenv("LOGGLY_TOKEN")
