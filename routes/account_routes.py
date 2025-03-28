@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional, List, Union
 from database.session import get_db
 from models.account import Account
 from schemas.account import AccountOut
@@ -10,7 +10,7 @@ from exceptions.exeptions import raise_token_not_found
 
 router = APIRouter()
 
-@router.get("/accounts", response_model=List[AccountOut])
+@router.get("/accounts", response_model=Union[List[AccountOut], dict])
 def sync_accounts(db: Session = Depends(get_db)):
     token = get_latest_token(db)
     if not token:

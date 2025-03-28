@@ -22,7 +22,6 @@ def get_latest_token(db: Session) -> Token:
     return db.query(Token).order_by(Token.created_at.desc()).first()
 
 def refresh_token(db: Session, token: Token):
-    print(token.refresh_token)
     try:
         auth_client.refresh(refresh_token="123456")
     except AuthClientError as e:
