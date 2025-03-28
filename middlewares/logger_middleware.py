@@ -8,6 +8,12 @@ from utils.logger import get_logger
 logger = get_logger("fastapi.middleware")
 
 class RequestLoggerMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware to log requests and responses in FastAPI.
+    Logs the request method, URL, response status, and processing time.
+    Also logs the request and response bodies for non-200 status codes.
+    """
+
     def __init__(self, app: ASGIApp):
         super().__init__(app)
 

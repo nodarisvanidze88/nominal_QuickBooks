@@ -6,6 +6,9 @@ from main import app
 client = TestClient(app)
 
 def test_callback_successful_token_exchange():
+    """
+    Test the callback endpoint with a successful token exchange.
+    """
     with patch("routes.auth_routes.auth_client") as mock_auth_client, \
          patch("services.token_service.save_tokens_to_db") as mock_save:
 
@@ -23,6 +26,9 @@ def test_callback_successful_token_exchange():
 
 
 def test_callback_auth_client_error():
+    """
+    Test the callback endpoint when the auth client raises an error.
+    """
     with patch("core.config.auth_client") as mock_auth_client:
         mock_auth_client.get_bearer_token.side_effect = AuthClientError(response=MagicMock(status_code=400))
 
@@ -33,6 +39,9 @@ def test_callback_auth_client_error():
 
 
 def test_callback_missing_query_params():
+    """
+    Test the callback endpoint with missing query parameters.
+    """
     response = client.get("/callback")
 
     assert response.status_code == 200

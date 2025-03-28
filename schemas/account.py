@@ -2,6 +2,9 @@ from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 class AccountOut(BaseModel):
+    """
+    Account schema for output.
+    """
     id: int
     name: Optional[str]
     classification: Optional[str]

@@ -16,6 +16,9 @@ def mock_token():
 
 
 def test_fetch_accounts_success(mock_token):
+    """
+    Test the fetch_accounts_from_qbo function with a valid token and successful account fetch.
+    """
     mock_response = MagicMock(spec=Response)
     mock_response.status_code = 200
 
@@ -34,6 +37,9 @@ def test_fetch_accounts_success(mock_token):
 
 
 def test_fetch_accounts_retries_on_failure(mock_token):
+    """
+    Test that the function retries on failure using backoff.
+    """
     with patch("services.quickbooks_service.requests.get", side_effect=RequestException("Network error")) as mock_get:
         with pytest.raises(RequestException):
             fetch_accounts_from_qbo(mock_token)

@@ -6,6 +6,9 @@ from core.config import ACCOUNT_API_URL
 
 @backoff.on_exception(backoff.expo, (requests.exceptions.RequestException,), max_tries=3)
 def fetch_accounts_from_qbo(token: Token):
+    """
+    Fetches accounts from QuickBooks Online using the provided token."
+    """
     headers = {
         "Authorization": f"Bearer {token.access_token}",
         "Accept": "application/json",

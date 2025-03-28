@@ -3,6 +3,11 @@ from database.base import Base
 from datetime import datetime, timezone, timedelta
 
 class Token(Base):
+    """
+    Token model for SQLAlchemy ORM.
+    Represents a token in the database.
+    This model is used to store access tokens and refresh tokens for QuickBooks Online API.
+    """
     __tablename__ = "tokens"
     access_token = Column(String, primary_key=True)
     refresh_token = Column(String)

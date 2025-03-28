@@ -2,6 +2,10 @@ from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
 from database.base import Base
 
 class Account(Base):
+    """"
+    Account model for SQLAlchemy ORM.
+    Represents an account in the database.
+    """
     __tablename__ = "accounts"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String)

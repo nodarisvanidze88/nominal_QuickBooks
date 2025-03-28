@@ -9,10 +9,13 @@ from database.session import get_db
 
 router = APIRouter()
 
-
-
 @router.get("/", summary="Start OAuth with intuit-oauth")
 def authorize():
+    """
+    Start the OAuth process by redirecting to the authorization URL.
+    Redirect to the authorization URL for the user to log in and authorize the app.
+    This will initiate the OAuth flow and redirect the user to the Intuit login page.
+    """
     auth_url = auth_client.get_authorization_url(
         scopes=[Scopes.ACCOUNTING, Scopes.PAYMENT]
     )
@@ -20,6 +23,10 @@ def authorize():
 
 @router.get("/callback", summary="OAuth callback using intuit-oauth")
 def callback(request: Request, db: Session = Depends(get_db)):
+    """
+    Handle the OAuth callback from Intuit.
+    This endpoint is called by Intuit after the user has authorized the app.
+    """
     auth_code = request.query_params.get("code")
     realm_id = request.query_params.get("realmId")
 

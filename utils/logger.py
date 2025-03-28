@@ -4,6 +4,9 @@ from core.config import LOGGLY_TOKEN
 
 
 def get_logger(name: str):
+    """
+    Create a logger that sends logs to Loggly."
+    """
     logger = logging.getLogger(name)
     if not logger.handlers:
         logger.setLevel(logging.INFO)

@@ -36,6 +36,9 @@ def mock_account_data():
     }
 
 def test_sync_accounts_success(mock_token, mock_account_data):
+    """
+    Test the sync_accounts endpoint with a valid token and successful account fetch.
+    """
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = mock_account_data
@@ -74,6 +77,9 @@ def test_sync_accounts_success(mock_token, mock_account_data):
         app.dependency_overrides = {}
 
 def test_sync_accounts_expired_token(mock_token, mock_account_data):
+    """
+    Test the sync_accounts endpoint with an expired token and successful refresh.
+    """
     expired_token = MagicMock()
     expired_token.access_token = "expired"
     expired_token.realm_id = "12345"
@@ -118,6 +124,9 @@ def test_sync_accounts_expired_token(mock_token, mock_account_data):
         app.dependency_overrides = {}
 
 def test_sync_accounts_no_token():
+    """
+    Test the sync_accounts endpoint when no token is found in the database.
+    """
     db = MagicMock()
 
     def override_get_db():
@@ -135,6 +144,9 @@ def test_sync_accounts_no_token():
         app.dependency_overrides = {}
 
 def test_sync_accounts_fetch_fails(mock_token):
+    """
+    Test the sync_accounts endpoint when fetching accounts fails.
+    """
     failed_response = MagicMock()
     failed_response.status_code = 500
     failed_response.json.return_value = {"error": "Internal Server Error"}

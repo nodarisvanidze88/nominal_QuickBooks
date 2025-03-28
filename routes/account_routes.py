@@ -12,6 +12,9 @@ router = APIRouter()
 
 @router.get("/accounts", response_model=Union[List[AccountOut], dict])
 def sync_accounts(db: Session = Depends(get_db)):
+    """
+    Sync accounts from QuickBooks Online to the local database.
+    """
     token = get_latest_token(db)
     if not token:
        return raise_token_not_found()
@@ -47,6 +50,9 @@ def search_accounts(
     classification: Optional[str] = Query(None),
     db: Session = Depends(get_db),
 ):
+    """"
+    Search accounts by active status and classification.
+    """
     query = db.query(Account)
     if active is not None:
         query = query.filter(Account.active == active)

@@ -1,4 +1,3 @@
-from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 import pytest
 from requests.models import Response
@@ -9,6 +8,9 @@ from fastapi import HTTPException
 
 
 def test_get_valid_token_with_valid_token():
+    """
+    Test the get_valid_token function when a valid token is found in the database.
+    """
     token = MagicMock(spec=Token)
     token.is_token_expired.return_value = False
 
@@ -20,6 +22,9 @@ def test_get_valid_token_with_valid_token():
     token.is_token_expired.assert_called_once()
 
 def test_get_valid_token_with_expired_token():
+    """
+    Test the get_valid_token function when the token is expired and needs to be refreshed.
+    """
     expired_token = MagicMock(spec=Token)
     expired_token.is_token_expired.return_value = True
 
@@ -34,6 +39,9 @@ def test_get_valid_token_with_expired_token():
         assert result == refreshed_token
 
 def test_get_valid_token_with_no_token():
+    """
+    Test the get_valid_token function when no token is found in the database.
+    """
     db = MagicMock()
     db.query.return_value.order_by.return_value.first.return_value = None
 
@@ -44,6 +52,9 @@ def test_get_valid_token_with_no_token():
     assert "QuickBooks Error" in exc_info.value.detail
 
 def test_get_latest_token_returns_token():
+    """
+    Test the get_latest_token function when a token is found in the database.
+    """
     latest_token = MagicMock(spec=Token)
 
     db = MagicMock()
@@ -53,7 +64,11 @@ def test_get_latest_token_returns_token():
 
     db.query.assert_called_once_with(Token)
     assert result == latest_token
+
 def test_get_latest_token_returns_none_when_no_token():
+    """
+    Test the get_latest_token function when no token is found in the database.
+    """
     db = MagicMock()
     db.query.return_value.order_by.return_value.first.return_value = None
 
@@ -63,6 +78,9 @@ def test_get_latest_token_returns_none_when_no_token():
     assert result is None
 
 def test_save_tokens_to_db():
+    """
+    Test the save_tokens_to_db function with valid token data.
+    """
     token_data = {
         "access_token": "abc123",
         "refresh_token": "refresh456",
@@ -90,6 +108,9 @@ def test_save_tokens_to_db():
         db.commit.assert_called_once()
 
 def test_refresh_token_success():
+    """
+    Test the refresh_token function when the auth client returns a new token successfully.
+    """
     db = MagicMock()
     token = MagicMock(spec=Token)
     token.realm_id = "12345"
@@ -120,6 +141,9 @@ def test_refresh_token_success():
 
 
 def test_refresh_token_failure():
+    """
+    Test the refresh_token function when the auth client raises an error.
+    """
     db = MagicMock()
     token = MagicMock(spec=Token)
     token.realm_id = "12345"

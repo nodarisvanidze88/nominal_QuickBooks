@@ -1,10 +1,14 @@
 from sqlalchemy.orm import Session
 from models.token import Token
-from exceptions.exeptions import raise_qbo_error, raise_token_refresh_failed
+from exceptions.exeptions import raise_qbo_error, raise_token_refresh_failed, raise_token_not_found
 from core.config import auth_client
 from intuitlib.exceptions import AuthClientError
 
 def get_valid_token(db: Session) -> Token:
+    """
+    Fetches the latest token from the database and checks if it is expired.
+    If expired, it refreshes the token and returns the new token.
+    """
     token = db.query(Token).order_by(Token.created_at.desc()).first()
     if not token:
         raise_qbo_error("Token not found. Please authenticate first.")
@@ -13,9 +17,15 @@ def get_valid_token(db: Session) -> Token:
     return token
 
 def get_latest_token(db: Session) -> Token:
+    """
+    Fetches the latest token from the database.
+    """
     return db.query(Token).order_by(Token.created_at.desc()).first()
 
-def refresh_token(db: Session, token: Token):
+def refresh_token(db: Session, token: Token) -> Token:
+    """
+    Refreshes the token using the refresh token.'
+    """
     try:
         auth_client.refresh(refresh_token=token.refresh_token)
     except AuthClientError as e:
@@ -32,7 +42,14 @@ def refresh_token(db: Session, token: Token):
     save_tokens_to_db(db, new_token_data)
     return get_latest_token(db)
 
-def save_tokens_to_db(db: Session, token_data: dict):
+def save_tokens_to_db(db: Session, token_data: dict) -> None:
+    """
+    Saves the token data to the database."
+    """
+    if not token_data or not isinstance(token_data, dict) :
+        raise_token_not_found("Token data is empty or invalid.")
+    db.query(Token).delete()
+    db.commit()
     token = Token(
         access_token=token_data["access_token"],
         refresh_token=token_data["refresh_token"],
