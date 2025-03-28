@@ -1,21 +1,15 @@
 from fastapi import APIRouter, Request, Depends
 from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
-from intuitlib.client import AuthClient
 from intuitlib.enums import Scopes
 from intuitlib.exceptions import AuthClientError
-from services.quickbooks_service import save_tokens_to_db
-from core.config import CLIENT_ID, CLIENT_SECRET, REDIRECT_URI, ENVIRONMENT
+from services.token_service import save_tokens_to_db
+from core.config import auth_client
 from database.session import get_db
 
 router = APIRouter()
 
-auth_client = AuthClient(
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
-    environment=ENVIRONMENT,
-    redirect_uri=REDIRECT_URI,
-)
+
 
 @router.get("/", summary="Start OAuth with intuit-oauth")
 def authorize():

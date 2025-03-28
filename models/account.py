@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, Float
+from sqlalchemy import Column, Integer, String, Boolean, Float, ForeignKey
 from database.base import Base
 
 class Account(Base):
@@ -10,3 +10,4 @@ class Account(Base):
     account_type = Column(String)
     active = Column(Boolean)
     current_balance = Column(Float)
+    parent_id = Column(Integer, ForeignKey("accounts.id"), nullable=True)

@@ -1,6 +1,6 @@
 import os
 from dotenv import load_dotenv
-
+from intuitlib.client import AuthClient
 load_dotenv()
 
 USE_DOCKER = os.getenv("USE_DOCKER", "false").lower() == "true"
@@ -17,3 +17,12 @@ CLIENT_ID = os.getenv("CLIENT_ID")
 CLIENT_SECRET = os.getenv("CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "sandbox")
+
+ACCOUNT_API_URL = "https://sandbox-quickbooks.api.intuit.com/v3/company/{realm_id}/query"
+
+auth_client = AuthClient(
+    client_id=CLIENT_ID,
+    client_secret=CLIENT_SECRET,
+    environment=ENVIRONMENT,
+    redirect_uri=REDIRECT_URI,
+)
