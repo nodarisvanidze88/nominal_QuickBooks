@@ -17,3 +17,8 @@ def raise_accounts_fetch_failed(details: str):
         status_code=status.HTTP_400_BAD_REQUEST,
         detail={"error": "Failed to fetch accounts", "details": details}
     )
+def raise_invalid_account_data(details: str):
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail={"error": "Invalid account data", "details": details}
+    )
