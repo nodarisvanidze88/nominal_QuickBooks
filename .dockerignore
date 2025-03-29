@@ -8,8 +8,7 @@ __pycache__/
 
 # Virtual environment
 venv/
-.env/
-.env.*  # optional, to avoid secrets in image
+
 
 # Logs
 *.log
