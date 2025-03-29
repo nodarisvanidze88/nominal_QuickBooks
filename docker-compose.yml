@@ -31,7 +31,7 @@ services:
         command: >
             bash -c "
                 alembic upgrade head &&
-                pytest tests &&
+                pytest tests/ &&
                 uvicorn main:app --host 0.0.0.0 --port 8000
                 "
 

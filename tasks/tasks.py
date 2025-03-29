@@ -2,7 +2,7 @@ from celery import Celery
 from utils.logger import get_logger
 from services.token_service import get_latest_token
 from services.quickbooks_service import fetch_accounts_from_qbo, save_accounts_to_db
-from core.config import CELERY_REDIS_URL
+from core.config import CELERY_REDIS_URL, CELERY_SCHEDULE_INTERVAL
 from database.session import SessionLocal
 
 
@@ -19,7 +19,7 @@ celery_app.conf.update(
     beat_schedule={
         'update-qbo-accounts-every-minute': {
             'task': 'tasks.tasks.update_qbo_accounts',
-            'schedule': 60.0,
+            'schedule': CELERY_SCHEDULE_INTERVAL,
         },
     },
     broker_pool_limit=5,
