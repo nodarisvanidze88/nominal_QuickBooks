@@ -17,5 +17,9 @@ class Token(Base):
     created_at = Column(DateTime, default=datetime.now(timezone.utc))
     
     def is_token_expired(self) -> bool:
-        expires_at = self.created_at + timedelta(seconds=self.expires_in)
+        if self.created_at.tzinfo is None:
+            created_at = self.created_at.replace(tzinfo=timezone.utc)
+        else:
+            created_at = self.created_at
+        expires_at = created_at + timedelta(seconds=int(self.expires_in))
         return datetime.now(timezone.utc) >= expires_at
