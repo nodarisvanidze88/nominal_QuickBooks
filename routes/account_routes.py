@@ -4,6 +4,7 @@ from typing import Optional, List, Union
 from database.session import get_db
 from models.account import Account
 from schemas.account import AccountOut
+from sqlalchemy import func
 from services.quickbooks_service import sync_qbo_accounts
 
 router = APIRouter()
@@ -30,3 +31,20 @@ def search_accounts(
     if classification:
         query = query.filter(Account.classification == classification)
     return query.all()
+
+@router.get("/accounts/summary")
+def get_account_balance_summary(db: Session = Depends(get_db)):
+    # Dynamically fetch distinct classification values
+    classifications = db.query(Account.classification).distinct().all()
+    classification_list = [c[0] for c in classifications if c[0] is not None]
+
+    summary = {}
+    for classification in classification_list:
+        total = (
+            db.query(func.sum(Account.current_balance))
+            .filter(Account.classification == classification)
+            .scalar()
+        )
+        summary[classification] = round(total or 0.0, 2)
+
+    return dict(sorted(summary.items(), key=lambda x: x[0]))

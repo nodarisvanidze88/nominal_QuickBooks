@@ -223,13 +223,14 @@ celery -A tasks.tasks beat --loglevel=info
 
 ## 🔌 API Endpoints
 
-| Method | Endpoint           | Description                     |
-| ------ | ------------------ | ------------------------------- |
-| GET    | `/auth`            | Initiate QuickBooks OAuth login |
-| GET    | `/callback`        | Handle redirect from QuickBooks |
-| GET    | `/accounts`        | Manually trigger account sync   |
-| GET    | `/accounts/search` | Search accounts                 |
-| GET    | `/health`          | Health check                    |
+| Method | Endpoint            | Description                           |
+| ------ | ------------------- | ------------------------------------- |
+| GET    | `/auth`             | Initiate QuickBooks OAuth login       |
+| GET    | `/callback`         | Handle redirect from QuickBooks       |
+| GET    | `/accounts`         | Manually trigger account sync         |
+| GET    | `/accounts/search`  | Search accounts                       |
+| GET    | `/accounts/summary` | Show summary result by classification |
+| GET    | `/health`           | Health check                          |
 
 ---
 

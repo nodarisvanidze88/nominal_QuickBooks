@@ -7,12 +7,11 @@ from database.session import get_db
 
 client = TestClient(app)
 
-def override_get_db():
-    db = MagicMock()
-    yield db
-
-
+# ---- Test: Sync Accounts ----
 def test_sync_accounts_route_success():
+    """
+    Test the sync_accounts route with a successful response from QuickBooks Online.
+    """
     dummy_accounts = [
         AccountOut(
             id=1,
@@ -34,6 +33,11 @@ def test_sync_accounts_route_success():
         )
     ]
 
+    mock_db = MagicMock()
+
+    def override_get_db():
+        yield mock_db
+
     app.dependency_overrides[get_db] = override_get_db
 
     with patch("routes.account_routes.sync_qbo_accounts", return_value=dummy_accounts):
@@ -42,10 +46,13 @@ def test_sync_accounts_route_success():
         assert isinstance(response.json(), list)
         assert response.json()[0]["name"] == "Bank Account"
 
-    app.dependency_overrides = {}  # Clean up
+    app.dependency_overrides = {}
 
-
+# ---- Test: Search Accounts ----
 def test_search_accounts():
+    """
+    Test the search_accounts route with filters.
+    """
     mock_account = Account(
         id=1,
         name="Test Account",
@@ -57,17 +64,15 @@ def test_search_accounts():
     )
 
     mock_db = MagicMock()
-
-    # Emulate .filter().filter().all() by chaining return values
     mock_query = mock_db.query.return_value
     mock_filter_1 = mock_query.filter.return_value
     mock_filter_2 = mock_filter_1.filter.return_value
     mock_filter_2.all.return_value = [mock_account]
 
-    def override_get_db_for_search():
+    def override_get_db():
         yield mock_db
 
-    app.dependency_overrides[get_db] = override_get_db_for_search
+    app.dependency_overrides[get_db] = override_get_db
 
     response = client.get("/accounts/search", params={"active": True, "classification": "Asset"})
 
@@ -82,4 +87,46 @@ def test_search_accounts():
     assert data[0]["active"] is True
     assert data[0]["current_balance"] == 100.0
 
-    app.dependency_overrides = {}  # Clean up
+    app.dependency_overrides = {}
+
+# ---- Test: Account Balance Summary ----
+def test_get_account_balance_summary():
+    """
+    Test the get_account_balance_summary route.
+    """
+    mock_db = MagicMock()
+
+    # Mock distinct classifications
+    mock_db.query().distinct().all.return_value = [
+        ("Asset",),
+        ("Liability",),
+        ("Expense",),
+    ]
+
+    # Mock sum queries
+    def scalar_side_effect():
+        filter_arg = mock_db.query().filter.call_args[0][0]
+        classification = str(filter_arg.right.value)  # extract value from SQLAlchemy BinaryExpression
+        return {
+            "Asset": 5000.0,
+            "Liability": -1200.5,
+            "Expense": 800.25,
+        }.get(classification, 0.0)
+
+    mock_db.query().filter().scalar.side_effect = scalar_side_effect
+
+    def override_get_db():
+        yield mock_db
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    response = client.get("/accounts/summary")
+    assert response.status_code == 200
+    summary = response.json()
+
+    assert isinstance(summary, dict)
+    assert summary["Asset"] == 5000.0
+    assert summary["Liability"] == -1200.5
+    assert summary["Expense"] == 800.25
+
+    app.dependency_overrides = {}
