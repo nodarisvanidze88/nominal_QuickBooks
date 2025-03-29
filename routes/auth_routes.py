@@ -9,7 +9,7 @@ from database.session import get_db
 
 router = APIRouter()
 
-@router.get("/", summary="Start OAuth with intuit-oauth")
+@router.get("/", include_in_schema=False)
 def authorize():
     """
     Start the OAuth process by redirecting to the authorization URL.
@@ -21,7 +21,7 @@ def authorize():
     )
     return RedirectResponse(auth_url)
 
-@router.get("/callback", summary="OAuth callback using intuit-oauth")
+@router.get("/callback", include_in_schema=False)
 def callback(request: Request, db: Session = Depends(get_db)):
     """
     Handle the OAuth callback from Intuit.

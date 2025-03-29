@@ -141,6 +141,12 @@ What this does:
 http://localhost:8000
 ```
 
+Then
+
+```bash
+http://localhost:8000/docs
+```
+
 ---
 
 ## ⚙️ Setup Locally (Without Docker)
