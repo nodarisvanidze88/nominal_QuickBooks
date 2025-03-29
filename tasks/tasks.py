@@ -26,8 +26,7 @@ celery_app.conf.update(
     broker_connection_timeout=10,
     broker_heartbeat=0
 )
-# celery_app.conf.timezone = 'UTC'
-# DB session
+
 
 
 @celery_app.task

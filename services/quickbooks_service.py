@@ -1,8 +1,8 @@
 import backoff
 import requests
 from models.token import Token
-from core.config import ACCOUNT_API_URL
 from models.account import Account
+from core.config import ACCOUNT_API_URL
 from sqlalchemy.orm import Session
 from services.token_service import get_latest_token, refresh_token
 from exceptions.exeptions import raise_accounts_fetch_failed, raise_token_not_found, raise_invalid_account_data
@@ -75,5 +75,4 @@ def build_account_tree(accounts):
                 parent["children"].append(account_dict[account.id])
         else:
             root_nodes.append(account_dict[account.id])
-
     return root_nodes
