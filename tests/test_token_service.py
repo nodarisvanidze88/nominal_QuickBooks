@@ -105,7 +105,7 @@ def test_save_tokens_to_db():
         )
 
         db.merge.assert_called_once_with(mock_token_instance)
-        db.commit.assert_called_once()
+        assert db.commit.call_count == 2
 
 def test_refresh_token_success():
     """

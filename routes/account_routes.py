@@ -4,9 +4,7 @@ from typing import Optional, List, Union
 from database.session import get_db
 from models.account import Account
 from schemas.account import AccountOut
-from services.quickbooks_service import fetch_accounts_from_qbo
-from services.token_service import get_latest_token, refresh_token
-from exceptions.exeptions import raise_token_not_found, raise_accounts_fetch_failed
+from services.quickbooks_service import sync_qbo_accounts
 
 router = APIRouter()
 
@@ -15,34 +13,7 @@ def sync_accounts(db: Session = Depends(get_db)):
     """
     Sync accounts from QuickBooks Online to the local database.
     """
-    token = get_latest_token(db)
-    if not token:
-       return raise_token_not_found()
-    response = fetch_accounts_from_qbo(token)
-
-    if response.status_code == 401:
-        token = refresh_token(db, token)
-        response = fetch_accounts_from_qbo(token)
-
-    if response.status_code != 200:
-        raise_accounts_fetch_failed(response.json())
-
-    accounts_data = response.json().get("QueryResponse", {}).get("Account", [])
-
-    for acc in accounts_data:
-        a = Account(
-            id=int(acc.get("Id")),
-            name=acc.get("Name"),
-            classification=acc.get("Classification"),
-            currency=acc.get("CurrencyRef", {}).get("value"),
-            account_type=acc.get("AccountType"),
-            active=acc.get("Active", False),
-            current_balance=acc.get("CurrentBalance", 0.0),
-            parent_id = int(acc.get("ParentRef").get("value")) if acc.get("SubAccount") else None,
-        )
-        db.merge(a)
-    db.commit()
-    return db.query(Account).all()
+    return sync_qbo_accounts(db)
 
 @router.get("/accounts/search", response_model=List[AccountOut])
 def search_accounts(

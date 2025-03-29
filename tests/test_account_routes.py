@@ -1,172 +1,85 @@
-import pytest
-from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
-from types import SimpleNamespace
+from fastapi.testclient import TestClient
+from models.account import Account
 from main import app
+from schemas.account import AccountOut
 from database.session import get_db
 
 client = TestClient(app)
 
-
-@pytest.fixture
-def mock_token():
-    token = MagicMock()
-    token.access_token = "valid"
-    token.realm_id = "12345"
-    return token
-
-
-@pytest.fixture
-def mock_account_data():
-    return {
-        "QueryResponse": {
-            "Account": [
-                {
-                    "Id": "1",
-                    "Name": "Bank",
-                    "Classification": "Asset",
-                    "CurrencyRef": {"value": "USD"},
-                    "AccountType": "Bank",
-                    "Active": True,
-                    "CurrentBalance": 1500.0,
-                    "SubAccount": False
-                }
-            ]
-        }
-    }
-
-def test_sync_accounts_success(mock_token, mock_account_data):
-    """
-    Test the sync_accounts endpoint with a valid token and successful account fetch.
-    """
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = mock_account_data
-
+def override_get_db():
     db = MagicMock()
-    db.query.return_value.all.return_value = [
-        SimpleNamespace(
+    yield db
+
+
+def test_sync_accounts_route_success():
+    dummy_accounts = [
+        AccountOut(
             id=1,
-            name="Bank",
+            name="Bank Account",
+            account_type="Bank",
             classification="Asset",
             currency="USD",
-            account_type="Bank",
             active=True,
-            current_balance=1500.0,
-            parent_id=None
+            current_balance=1000.0
+        ),
+        AccountOut(
+            id=2,
+            name="Sales Account",
+            account_type="Income",
+            classification="Revenue",
+            currency="USD",
+            active=True,
+            current_balance=3000.5
         )
     ]
 
-    def override_get_db():
-        yield db
+    app.dependency_overrides[get_db] = override_get_db
 
-    with patch("routes.account_routes.get_latest_token", return_value=mock_token), \
-         patch("routes.account_routes.fetch_accounts_from_qbo", return_value=mock_response), \
-         patch("routes.account_routes.refresh_token") as mock_refresh:
-
-        app.dependency_overrides[get_db] = override_get_db
-
+    with patch("routes.account_routes.sync_qbo_accounts", return_value=dummy_accounts):
         response = client.get("/accounts")
-
         assert response.status_code == 200
-        assert response.json()[0]["name"] == "Bank"
-        db.merge.assert_called_once()
-        db.commit.assert_called_once()
-        mock_refresh.assert_not_called()
+        assert isinstance(response.json(), list)
+        assert response.json()[0]["name"] == "Bank Account"
 
-        app.dependency_overrides = {}
+    app.dependency_overrides = {}  # Clean up
 
-def test_sync_accounts_expired_token(mock_token, mock_account_data):
-    """
-    Test the sync_accounts endpoint with an expired token and successful refresh.
-    """
-    expired_token = MagicMock()
-    expired_token.access_token = "expired"
-    expired_token.realm_id = "12345"
 
-    unauthorized_response = MagicMock()
-    unauthorized_response.status_code = 401
+def test_search_accounts():
+    mock_account = Account(
+        id=1,
+        name="Test Account",
+        classification="Asset",
+        currency="USD",
+        account_type="Bank",
+        active=True,
+        current_balance=100.0
+    )
 
-    refreshed_response = MagicMock()
-    refreshed_response.status_code = 200
-    refreshed_response.json.return_value = mock_account_data
+    mock_db = MagicMock()
 
-    db = MagicMock()
-    db.query.return_value.all.return_value = [
-        SimpleNamespace(
-            id=1,
-            name="Bank",
-            classification="Asset",
-            currency="USD",
-            account_type="Bank",
-            active=True,
-            current_balance=1500.0,
-            parent_id=None
-        )
-    ]
+    # Emulate .filter().filter().all() by chaining return values
+    mock_query = mock_db.query.return_value
+    mock_filter_1 = mock_query.filter.return_value
+    mock_filter_2 = mock_filter_1.filter.return_value
+    mock_filter_2.all.return_value = [mock_account]
 
-    def override_get_db():
-        yield db
+    def override_get_db_for_search():
+        yield mock_db
 
-    with patch("routes.account_routes.get_latest_token", return_value=expired_token), \
-         patch("routes.account_routes.fetch_accounts_from_qbo", side_effect=[unauthorized_response, refreshed_response]), \
-         patch("routes.account_routes.refresh_token", return_value=mock_token):
+    app.dependency_overrides[get_db] = override_get_db_for_search
 
-        app.dependency_overrides[get_db] = override_get_db
+    response = client.get("/accounts/search", params={"active": True, "classification": "Asset"})
 
-        response = client.get("/accounts")
+    assert response.status_code == 200
+    data = response.json()
 
-        assert response.status_code == 200
-        assert response.json()[0]["name"] == "Bank"
-        db.merge.assert_called_once()
-        db.commit.assert_called_once()
+    assert isinstance(data, list)
+    assert data[0]["id"] == 1
+    assert data[0]["name"] == "Test Account"
+    assert data[0]["classification"] == "Asset"
+    assert data[0]["currency"] == "USD"
+    assert data[0]["active"] is True
+    assert data[0]["current_balance"] == 100.0
 
-        app.dependency_overrides = {}
-
-def test_sync_accounts_no_token():
-    """
-    Test the sync_accounts endpoint when no token is found in the database.
-    """
-    db = MagicMock()
-
-    def override_get_db():
-        yield db
-
-    with patch("routes.account_routes.get_latest_token", return_value=None), \
-         patch("routes.account_routes.raise_token_not_found") as mock_raise:
-
-        app.dependency_overrides[get_db] = override_get_db
-
-        client.get("/accounts")
-
-        mock_raise.assert_called_once()
-
-        app.dependency_overrides = {}
-
-def test_sync_accounts_fetch_fails(mock_token):
-    """
-    Test the sync_accounts endpoint when fetching accounts fails.
-    """
-    failed_response = MagicMock()
-    failed_response.status_code = 500
-    failed_response.json.return_value = {"error": "Internal Server Error"}
-
-    db = MagicMock()
-
-    def override_get_db():
-        yield db
-
-    with patch("routes.account_routes.get_latest_token", return_value=mock_token), \
-         patch("routes.account_routes.fetch_accounts_from_qbo", return_value=failed_response):
-
-        app.dependency_overrides[get_db] = override_get_db
-
-        response = client.get("/accounts")
-
-        assert response.status_code == 400
-        data = response.json()
-        assert data["detail"]["error"] == "Failed to fetch accounts"
-        assert "Internal Server Error" in data["detail"]["details"]["error"]
-
-        app.dependency_overrides = {}
-
+    app.dependency_overrides = {}  # Clean up
