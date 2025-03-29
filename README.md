@@ -225,7 +225,7 @@ celery -A tasks.tasks beat --loglevel=info
 
 | Method | Endpoint            | Description                           |
 | ------ | ------------------- | ------------------------------------- |
-| GET    | `/auth`             | Initiate QuickBooks OAuth login       |
+| GET    | `/`                 | Initiate QuickBooks OAuth login       |
 | GET    | `/callback`         | Handle redirect from QuickBooks       |
 | GET    | `/accounts`         | Manually trigger account sync         |
 | GET    | `/accounts/search`  | Search accounts                       |
