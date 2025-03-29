@@ -130,3 +130,31 @@ def test_get_account_balance_summary():
     assert summary["Expense"] == 800.25
 
     app.dependency_overrides = {}
+
+def test_get_account_tree():
+    # Sample mock accounts to simulate hierarchy
+    account_root = Account(id=1, name="Assets", parent_id=None)
+    account_child_1 = Account(id=2, name="Cash", parent_id=1)
+    account_child_2 = Account(id=3, name="Bank", parent_id=1)
+    account_sub_child = Account(id=4, name="Savings", parent_id=3)
+
+    mock_db = MagicMock()
+    mock_db.query().all.return_value = [
+        account_root, account_child_1, account_child_2, account_sub_child
+    ]
+    def override_get_db():
+        yield mock_db
+    app.dependency_overrides[get_db] = override_get_db
+
+    response = client.get("/accounts/tree")
+    assert response.status_code == 200
+    tree = response.json()
+
+    assert isinstance(tree, list)
+    assert len(tree) == 1
+    assert tree[0]["name"] == "Assets"
+    assert len(tree[0]["children"]) == 2
+    assert tree[0]["children"][1]["name"] == "Bank"
+    assert tree[0]["children"][1]["children"][0]["name"] == "Savings"
+
+    app.dependency_overrides = {}

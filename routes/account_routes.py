@@ -5,7 +5,7 @@ from database.session import get_db
 from models.account import Account
 from schemas.account import AccountOut
 from sqlalchemy import func
-from services.quickbooks_service import sync_qbo_accounts
+from services.quickbooks_service import sync_qbo_accounts, build_account_tree
 
 router = APIRouter()
 
@@ -48,3 +48,8 @@ def get_account_balance_summary(db: Session = Depends(get_db)):
         summary[classification] = round(total or 0.0, 2)
 
     return dict(sorted(summary.items(), key=lambda x: x[0]))
+
+@router.get("/accounts/tree")
+def get_account_tree(db: Session = Depends(get_db)):
+    accounts = db.query(Account).all()
+    return build_account_tree(accounts)

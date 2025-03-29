@@ -1,6 +1,6 @@
 import pytest
 from unittest.mock import patch, MagicMock
-from services.quickbooks_service import fetch_accounts_from_qbo, sync_qbo_accounts
+from services.quickbooks_service import fetch_accounts_from_qbo, sync_qbo_accounts, build_account_tree
 from models.token import Token
 from requests.exceptions import RequestException
 from requests.models import Response
@@ -67,3 +67,51 @@ def test_sync_qbo_accounts_success():
 
         mock_save.assert_called_once()
         db.query.assert_called_once()
+
+def test_build_account_tree_single_root():
+    account1 = MagicMock(id=1, name="Root Account", parent_id=None)
+    account2 = MagicMock(id=2, name="Child Account", parent_id=1)
+    account3 = MagicMock(id=3, name="Another Child", parent_id=1)
+
+    accounts = [account1, account2, account3]
+
+    tree = build_account_tree(accounts)
+
+    assert len(tree) == 1
+    assert tree[0]["id"] == 1
+    assert len(tree[0]["children"]) == 2
+    child_ids = {child["id"] for child in tree[0]["children"]}
+    assert child_ids == {2, 3}
+
+
+def test_build_account_tree_multiple_roots():
+    account1 = MagicMock(id=1, name="Root A", parent_id=None)
+    account2 = MagicMock(id=2, name="Root B", parent_id=None)
+    account3 = MagicMock(id=3, name="Child of A", parent_id=1)
+    account4 = MagicMock(id=4, name="Child of B", parent_id=2)
+
+    accounts = [account1, account2, account3, account4]
+
+    tree = build_account_tree(accounts)
+
+    assert len(tree) == 2
+    root_ids = {node["id"] for node in tree}
+    assert root_ids == {1, 2}
+
+    for node in tree:
+        if node["id"] == 1:
+            assert node["children"][0]["id"] == 3
+        if node["id"] == 2:
+            assert node["children"][0]["id"] == 4
+
+
+def test_build_account_tree_orphan_node():
+    account1 = MagicMock(id=1, name="Root", parent_id=None)
+    account2 = MagicMock(id=2, name="Orphan", parent_id=99)  # 99 does not exist
+
+    accounts = [account1, account2]
+    tree = build_account_tree(accounts)
+
+    assert len(tree) == 1
+    assert tree[0]["id"] == 1
+    assert len(tree[0]["children"]) == 0  # Orphan should be ignored

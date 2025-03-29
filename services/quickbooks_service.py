@@ -62,3 +62,18 @@ def sync_qbo_accounts(db: Session) -> list[Account]:
     save_accounts_to_db(db, accounts_data)
 
     return db.query(Account).all()
+
+def build_account_tree(accounts):
+    account_dict = {account.id: {"id": account.id, "name": account.name, "children": []} for account in accounts}
+
+    root_nodes = []
+
+    for account in accounts:
+        if account.parent_id:
+            parent = account_dict.get(account.parent_id)
+            if parent:
+                parent["children"].append(account_dict[account.id])
+        else:
+            root_nodes.append(account_dict[account.id])
+
+    return root_nodes
