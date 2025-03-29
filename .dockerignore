@@ -1,0 +1,47 @@
+# Byte-compiled / Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.pdb
+
+# Virtual environment
+venv/
+.env/
+.env.*  # optional, to avoid secrets in image
+
+# Logs
+*.log
+logs/
+log/
+
+# Distribution / packaging
+*.egg-info/
+.eggs/
+dist/
+build/
+*.whl
+
+# OS / IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Tests cache
+.coverage
+.tox/
+.pytest_cache/
+htmlcov/
+tests/__pycache__/
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
